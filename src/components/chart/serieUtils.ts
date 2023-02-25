@@ -783,22 +783,29 @@ export default {
         .sort((a, b) => a.range[0] - b.range[0])
         .reduce((acc, interval, index) => {
           const pI = acc.length - 1
-          const middle =
-            interval.range[0] + (interval.range[1] - interval.range[0]) / 2
           if (index && acc[pI].range[1] >= interval.range[0]) {
+            acc[pI].bottom =
+              (acc[pI].bottom * acc[pI].strength +
+                interval.range[0] * interval.strength) /
+              (acc[pI].strength + interval.strength)
+            acc[pI].top =
+              (acc[pI].top * acc[pI].strength +
+                interval.range[1] * interval.strength) /
+              (acc[pI].strength + interval.strength)
             acc[pI].range = [
               Math.min(interval.range[0], acc[pI].range[0]),
               Math.max(interval.range[1], acc[pI].range[1])
             ]
             acc[pI].ids.push(interval.id)
-            acc[pI].weightedPrices.push(middle * interval.strength)
             acc[pI].strength += interval.strength
             return acc
+          } else {
+            interval.bottom = Math.min(interval.range[0], interval.range[1])
+            interval.top = Math.max(interval.range[0], interval.range[1])
           }
           acc.push({
             ...interval,
-            ids: [interval.id],
-            weightedPrices: [middle * interval.strength]
+            ids: [interval.id]
           })
 
           return acc
@@ -807,15 +814,8 @@ export default {
           if (interval.strength < (threshold || 1)) {
             return acc
           }
-          const middle =
-            interval.weightedPrices.reduce((acc, price) => {
-              return acc + price
-            }, 0) / interval.strength
 
-          interval.range = [
-            Math.floor(middle / precision) * precision,
-            Math.ceil(middle / precision) * precision
-          ]
+          interval.range = [interval.bottom, interval.top]
 
           acc.push(interval)
           return acc

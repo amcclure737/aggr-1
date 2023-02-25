@@ -186,7 +186,7 @@ export default {
     submit() {
       this.close({
         selection: this.selection,
-        script: this.form.includeScript
+        script: this.form.script
       })
     },
     toggleType(color, value) {
